@@ -1,10 +1,10 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="区域名称" prop="regionName">
+      <el-form-item label="合作商名称" prop="partnerName">
         <el-input
-          v-model="queryParams.regionName"
-          placeholder="请输入区域名称"
+          v-model="queryParams.partnerName"
+          placeholder="请输入合作商名称"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -22,7 +22,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['manage:region:add']"
+          v-hasPermi="['manage:partner:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -32,7 +32,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['manage:region:edit']"
+          v-hasPermi="['manage:partner:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -42,7 +42,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['manage:region:remove']"
+          v-hasPermi="['manage:partner:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -51,23 +51,24 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['manage:region:export']"
+          v-hasPermi="['manage:partner:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="regionList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="partnerList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" align="center" type="index" width="55"/>
-      <el-table-column label="区域名称" align="center" prop="regionName" />
-      <el-table-column label="点位数" align="center" prop="nodeCount" /> 
-      <el-table-column label="备注说明" align="center" prop="remark" />
+      <el-table-column label="主键id" align="center" prop="id" />
+      <el-table-column label="合作商名称" align="center" prop="partnerName" />
+      <el-table-column label="联系人" align="center" prop="contactPerson" />
+      <el-table-column label="联系电话" align="center" prop="contactPhone" />
+      <el-table-column label="分成比例" align="center" prop="profitRatio" />
+      <el-table-column label="账号" align="center" prop="account" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary"  @click="handleUpdate(scope.row)" v-hasPermi="['manage:region:edit']">查看详情</el-button>
-          <el-button link type="primary"  @click="handleUpdate(scope.row)" v-hasPermi="['manage:region:edit']">修改</el-button>
-          <el-button link type="primary"  @click="handleDelete(scope.row)" v-hasPermi="['manage:region:remove']">删除</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['manage:partner:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['manage:partner:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -80,14 +81,26 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改区域管理对话框 -->
+    <!-- 添加或修改合作商管理对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="regionRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="区域名称" prop="regionName">
-          <el-input v-model="form.regionName" placeholder="请输入区域名称" />
+      <el-form ref="partnerRef" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="合作商名称" prop="partnerName">
+          <el-input v-model="form.partnerName" placeholder="请输入合作商名称" />
         </el-form-item>
-        <el-form-item label="备注说明" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+        <el-form-item label="联系人" prop="contactPerson">
+          <el-input v-model="form.contactPerson" placeholder="请输入联系人" />
+        </el-form-item>
+        <el-form-item label="联系电话" prop="contactPhone">
+          <el-input v-model="form.contactPhone" placeholder="请输入联系电话" />
+        </el-form-item>
+        <el-form-item label="分成比例" prop="profitRatio">
+          <el-input v-model="form.profitRatio" placeholder="请输入分成比例" />
+        </el-form-item>
+        <el-form-item label="账号" prop="account">
+          <el-input v-model="form.account" placeholder="请输入账号" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" placeholder="请输入密码" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -100,12 +113,12 @@
   </div>
 </template>
 
-<script setup name="Region">
-import { listRegion, getRegion, delRegion, addRegion, updateRegion } from "@/api/manage/region"
+<script setup name="Partner">
+import { listPartner, getPartner, delPartner, addPartner, updatePartner } from "@/api/manage/partner"
 
 const { proxy } = getCurrentInstance()
 
-const regionList = ref([])
+const partnerList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -120,22 +133,37 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    regionName: null,
+    partnerName: null,
   },
   rules: {
-    regionName: [
-      { required: true, message: "区域名称不能为空", trigger: "blur" }
+    partnerName: [
+      { required: true, message: "合作商名称不能为空", trigger: "blur" }
+    ],
+    contactPerson: [
+      { required: true, message: "联系人不能为空", trigger: "blur" }
+    ],
+    contactPhone: [
+      { required: true, message: "联系电话不能为空", trigger: "blur" }
+    ],
+    profitRatio: [
+      { required: true, message: "分成比例不能为空", trigger: "blur" }
+    ],
+    account: [
+      { required: true, message: "账号不能为空", trigger: "blur" }
+    ],
+    password: [
+      { required: true, message: "密码不能为空", trigger: "blur" }
     ],
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询区域管理列表 */
+/** 查询合作商管理列表 */
 function getList() {
   loading.value = true
-  listRegion(queryParams.value).then(response => {
-    regionList.value = response.rows
+  listPartner(queryParams.value).then(response => {
+    partnerList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -151,14 +179,19 @@ function cancel() {
 function reset() {
   form.value = {
     id: null,
-    regionName: null,
+    partnerName: null,
+    contactPerson: null,
+    contactPhone: null,
+    profitRatio: null,
+    account: null,
+    password: null,
     createTime: null,
     updateTime: null,
     createBy: null,
     updateBy: null,
     remark: null
   }
-  proxy.resetForm("regionRef")
+  proxy.resetForm("partnerRef")
 }
 
 /** 搜索按钮操作 */
@@ -184,32 +217,32 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加区域管理"
+  title.value = "添加合作商管理"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
   const _id = row.id || ids.value
-  getRegion(_id).then(response => {
+  getPartner(_id).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改区域管理"
+    title.value = "修改合作商管理"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["regionRef"].validate(valid => {
+  proxy.$refs["partnerRef"].validate(valid => {
     if (valid) {
       if (form.value.id != null) {
-        updateRegion(form.value).then(response => {
+        updatePartner(form.value).then(response => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addRegion(form.value).then(response => {
+        addPartner(form.value).then(response => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -222,8 +255,8 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value
-  proxy.$modal.confirm('是否确认删除区域管理编号为"' + _ids + '"的数据项？').then(function() {
-    return delRegion(_ids)
+  proxy.$modal.confirm('是否确认删除合作商管理编号为"' + _ids + '"的数据项？').then(function() {
+    return delPartner(_ids)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -232,9 +265,9 @@ function handleDelete(row) {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('manage/region/export', {
+  proxy.download('manage/partner/export', {
     ...queryParams.value
-  }, `region_${new Date().getTime()}.xlsx`)
+  }, `partner_${new Date().getTime()}.xlsx`)
 }
 
 getList()
