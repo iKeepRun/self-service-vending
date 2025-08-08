@@ -152,7 +152,7 @@ public class GlobalExceptionHandler
     {
         if(e.getMessage().contains("delete")){
 
-            return AjaxResult.error("无法删除数据");
+            return AjaxResult.error("无法删除数据，有其他数据引用");
         }
         return AjaxResult.error("违反了数据完整性约束限制");
     }
