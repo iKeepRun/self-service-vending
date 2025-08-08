@@ -84,6 +84,8 @@ watch(() => props.modelValue, val => {
     const list = Array.isArray(val) ? val : props.modelValue.split(',');
     // 然后将数组转为对象数组
     fileList.value = list.map(item => {
+      console.log("tupian duixiang ",item);
+      
       if (typeof item === "string") {
         item = { name: item, url: item };
       }

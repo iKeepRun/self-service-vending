@@ -92,13 +92,22 @@ watch(() => props.modelValue, val => {
     const list = Array.isArray(val) ? val : props.modelValue.split(",");
     // 然后将数组转为对象数组
     fileList.value = list.map(item => {
-      if (typeof item === "string") {
-        if (item.indexOf(baseUrl) === -1) {
-          item = { name: baseUrl + item, url: baseUrl + item };
-        } else {
-          item = { name: item, url: item };
-        }
+      // if (typeof item === "string") {
+      //   if (item.indexOf(baseUrl) === -1) {
+      //     item = { name: baseUrl + item, url: baseUrl + item };
+      //   } else {
+      //     item = { name: item, url: item };
+      //   }
+      // }
+
+    if(typeof item === "string"){
+      if(item.startsWith("http")){
+        item = { name: item, url: item };
+      }else{
+        item = { name: baseUrl+item, url: baseUrl+item };
       }
+    }
+
       return item;
     });
   } else {
